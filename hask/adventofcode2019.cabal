@@ -2,7 +2,7 @@ name:                adventofcode2019
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/thomaschrstnsn/adventofcode2018#readme
+homepage:            https://github.com/thomaschrstnsn/adventofcode2019#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Author name here
@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      .
-  build-depends:       base >= 4.7 && < 5, hspec, hspec-core, QuickCheck, vector, primitive, containers, parsec, time, vector
+  build-depends:       base >= 4.7 && < 5, hspec, hspec-core, QuickCheck, vector, split
   default-language:    Haskell2010
   other-modules:       Specs
   ghc-options:         -W
