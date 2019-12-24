@@ -15,10 +15,9 @@ import           Test.Hspec                     ( describe
                                                 , shouldBe
                                                 )
 import qualified Data.Vector.Unboxed           as V
-import           Data.Vector.Unboxed            ( Vector
-                                                , (!)
-                                                )
+import           Data.Vector.Unboxed            ( Vector )
 import           Data.List.Split                ( splitOn )
+import           IntCode
 
 input :: IO String
 input = head . lines <$> readFile "../day02input.txt"
@@ -29,43 +28,13 @@ readInputs l = V.fromList $ readInt <$> splitOn "," l
   readInt :: String -> Int
   readInt = read
 
-compute :: Int -> Vector Int -> Vector Int
-compute offset state = case step offset state of
-  (state', Just offset') -> compute offset' state'
-  (state', Nothing     ) -> state'
-
-data Instruction =
-  Mul (Int, Int, Int)
-  | Add (Int, Int, Int)
-  | Halt
-
-step :: Int -> Vector Int -> (Vector Int, Maybe Int)
-step offset state = case instruction of
-  Mul (xi, yi, di) -> calc xi yi di (*)
-  Add (xi, yi, di) -> calc xi yi di (+)
-  Halt             -> (state, Nothing)
- where
-  instruction :: Instruction
-  instruction =
-    case (state ! offset, V.toList $ V.slice (offset + 1) 3 state) of
-      (1 , [x, y, dest]) -> Add (x, y, dest)
-      (2 , [x, y, dest]) -> Mul (x, y, dest)
-      (99, _           ) -> Halt
-      (x, _) ->
-        error $ "unknown instruction: " ++ show x ++ " @ " ++ show offset
-  modify :: Int -> Int -> Vector Int
-  modify dest value = V.update state (V.fromList [(dest, value)])
-  calc :: Int -> Int -> Int -> (Int -> Int -> Int) -> (Vector Int, Maybe Int)
-  calc xi yi di op =
-    let x = state ! xi
-        y = state ! yi
-        r = op x y
-    in  (modify di r, Just $ offset + 4)
+compute :: Vector Int -> Vector Int
+compute state = sMemory $ run $ initial state
 
 desiredResult = 19690720
 
 tryPair :: Vector Int -> (Int, Int) -> Int
-tryPair origState (x, y) = V.head $ compute 0 state
+tryPair origState (x, y) = V.head $ compute state
   where state = V.update origState (V.fromList [(1, x), (2, y)])
 
 solve :: String -> (Int, Int, Int, Int)
@@ -84,7 +53,7 @@ tests = describe "solve" $ specFromExamples
   ]
   (\(input, expected) ->
     specItem (show input ++ " should be computed into: " ++ show expected)
-      $          compute 0 (V.fromList input)
+      $          compute (V.fromList input)
       `shouldBe` V.fromList expected
   )
 
