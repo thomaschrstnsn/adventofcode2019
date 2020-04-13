@@ -11,4 +11,9 @@ name = "day01"
 test = false
 bench = false
 
+[[bin]]
+name = "day02"
+test = false
+bench = false
+
 [dependencies]
