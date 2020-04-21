@@ -70,38 +70,6 @@ pub struct Point {
     y: i32,
 }
 
-use std::{collections::HashSet, hash::Hash};
-
-fn points_on_elem(pelm: &PathElement, mut p: &mut Point) -> HashSet<Point> {
-    let mut res: HashSet<Point> = HashSet::new();
-    let operation: fn(&mut Point) -> () = match pelm.direction {
-        Direction::Up => |i| i.y += 1,
-        Direction::Down => |i| i.y -= 1,
-        Direction::Left => |i| i.x -= 1,
-        Direction::Right => |i| i.x += 1,
-    };
-    for _i in 1..=pelm.distance {
-        operation(&mut p);
-        res.insert(p.clone());
-    }
-    res
-}
-
-fn points_on_path(p: &Path) -> HashSet<Point> {
-    let mut cur = Point { x: 0, y: 0 };
-    let mut res: HashSet<Point> = HashSet::new();
-    for pelm in p {
-        let new_points = points_on_elem(&pelm, &mut cur);
-        let combined: HashSet<_> = res.union(&new_points).map(|&x| x).collect();
-        res = combined;
-    }
-    res
-}
-
-fn manhattan_distance(p: &Point) -> i32 {
-    p.x.abs() + p.y.abs()
-}
-
 pub mod part_1 {
     use super::*;
 
@@ -125,6 +93,36 @@ pub mod part_1 {
         ex2: (("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51","U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),135),
     }
 
+    use std::collections::HashSet;
+
+    fn points_on_elem(pelm: &PathElement, mut p: &mut Point) -> HashSet<Point> {
+        let mut res: HashSet<Point> = HashSet::new();
+        let operation: fn(&mut Point) -> () = match pelm.direction {
+            Direction::Up => |i| i.y += 1,
+            Direction::Down => |i| i.y -= 1,
+            Direction::Left => |i| i.x -= 1,
+            Direction::Right => |i| i.x += 1,
+        };
+        for _i in 1..=pelm.distance {
+            operation(&mut p);
+            res.insert(p.clone());
+        }
+        res
+    }
+    fn points_on_path(p: &Path) -> HashSet<Point> {
+        let mut cur = Point { x: 0, y: 0 };
+        let mut res: HashSet<Point> = HashSet::new();
+        for pelm in p {
+            let new_points = points_on_elem(&pelm, &mut cur);
+            let combined: HashSet<_> = res.union(&new_points).map(|&x| x).collect();
+            res = combined;
+        }
+        res
+    }
+    fn manhattan_distance(p: &Point) -> i32 {
+        p.x.abs() + p.y.abs()
+    }
+
     pub fn solution(input: &Vec<Path>) -> Result<i32, String> {
         if input.len() != 2 {
             return Err(String::from("Expected exactly two paths"));
@@ -138,7 +136,81 @@ pub mod part_1 {
 
 pub mod part_2 {
     use super::*;
-    pub fn solution(input: &Vec<Path>) -> u32 {
-        42
+
+    macro_rules! solution_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let ((input1, input2), expected) = $value;
+                let paths = vec![input1, input2].iter().map(|&x| parsing::line(x)).collect();
+                let result = solution(&paths);
+                assert_eq!(Ok(expected), result);
+            }
+        )*
+        }
+    }
+
+    solution_tests! {
+        ex1: (("R75,D30,R83,U83,L12,D49,R71,U7,L72","U62,R66,U55,R34,D71,R55,D58,R83"),610),
+        ex2: (("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51","U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),410),
+    }
+
+    use std::collections::HashMap;
+    use std::collections::HashSet;
+
+    type PointDistanceMap = HashMap<Point, u32>;
+
+    fn points_on_elem(
+        pelm: &PathElement,
+        mut map: &mut PointDistanceMap,
+        mut p: &mut Point,
+        mut i: &mut u32,
+    ) -> () {
+        let operation: fn(&mut Point) -> () = match pelm.direction {
+            Direction::Up => |i| i.y += 1,
+            Direction::Down => |i| i.y -= 1,
+            Direction::Left => |i| i.x -= 1,
+            Direction::Right => |i| i.x += 1,
+        };
+        for _i in 1..=pelm.distance {
+            operation(&mut p);
+            *i += 1;
+            if !map.contains_key(p) {
+                map.insert(p.clone(), *i);
+            }
+        }
+    }
+    fn points_on_path(p: &Path) -> PointDistanceMap {
+        let mut cur = Point { x: 0, y: 0 };
+        let mut res = HashMap::new();
+        let mut dist = 0;
+        for pelm in p {
+            let new_points = points_on_elem(&pelm, &mut res, &mut cur, &mut dist);
+        }
+        res
+    }
+
+    fn path_distance(mpx: &PointDistanceMap, mpy: &PointDistanceMap, p: &Point) -> u32 {
+        let dx = mpx.get(p).expect("point should be in map");
+        let dy = mpy.get(p).expect("point should be in map");
+        dx + dy
+    }
+
+    pub fn solution(input: &Vec<Path>) -> Result<u32, String> {
+        if input.len() != 2 {
+            return Err(String::from("Expected exactly two paths"));
+        }
+        let mpx = points_on_path(&input[0]);
+        let mpy = points_on_path(&input[1]);
+
+        let px: HashSet<Point> = mpx.keys().map(|&p| p).collect();
+        let py: HashSet<Point> = mpy.keys().map(|&p| p).collect();
+
+        Ok(px
+            .intersection(&py)
+            .map(|&p| path_distance(&mpx, &mpy, &p))
+            .min()
+            .unwrap())
     }
 }
