@@ -1,6 +1,7 @@
 use super::common::{parsers, read_day_data};
+use crate::im::Vector;
 
-pub fn input() -> Vec<u32> {
+pub fn input() -> Vector<u32> {
     read_day_data(2).split(",").map(parsers::u32).collect()
 }
 
@@ -13,11 +14,11 @@ pub enum Status {
 
 pub struct State {
     instruction_pointer: usize,
-    memory: Vec<u32>,
+    memory: Vector<u32>,
     status: Status,
 }
 
-fn instruction(memory: &Vec<u32>, instruction_pointer: usize) -> Vec<u32> {
+fn instruction(memory: &Vector<u32>, instruction_pointer: usize) -> Vec<u32> {
     memory
         .iter()
         .skip(instruction_pointer)
@@ -55,7 +56,7 @@ fn run_one_instruction(state: &mut State) {
     };
 }
 
-fn run_program(memory: &mut Vec<u32>) -> State {
+fn run_program(memory: &mut Vector<u32>) -> State {
     let mut state = State {
         instruction_pointer: 0,
         memory: memory.clone(),
@@ -73,7 +74,8 @@ macro_rules! run_program_tests {
         #[test]
         fn $name() {
             let (input, expected) = $value;
-            let state = run_program(&mut input.clone());
+            let state = run_program(&mut input.iter().map(|&x| x).collect());
+            let expected : Vector<u32>= expected.iter().map(|&x| x).collect();
             assert_eq!(expected, state.memory);
             assert_eq!(Status::Stopped, state.status)
         }
@@ -90,7 +92,7 @@ run_program_tests! {
 
 pub mod part_1 {
     use super::*;
-    pub fn solution(memory: &Vec<u32>) -> u32 {
+    pub fn solution(memory: &Vector<u32>) -> u32 {
         let mut fixed = memory.clone();
         fixed[1] = 12;
         fixed[2] = 2;
@@ -101,7 +103,7 @@ pub mod part_1 {
 
 pub mod part_2 {
     use super::*;
-    pub fn solution(memory: &Vec<u32>) -> Option<u32> {
+    pub fn solution(memory: &Vector<u32>) -> Option<u32> {
         for noun in 0..=99 {
             for verb in 0..=99 {
                 let mut fixed = memory.clone();
