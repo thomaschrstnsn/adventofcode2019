@@ -22,7 +22,7 @@ fn instruction(memory: &Vec<u32>, instruction_pointer: usize) -> Vec<u32> {
         .iter()
         .skip(instruction_pointer)
         .take(4)
-        .map(|&x| x)
+        .cloned()
         .collect()
 }
 

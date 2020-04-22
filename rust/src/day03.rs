@@ -114,7 +114,7 @@ pub mod part_1 {
         let mut res: HashSet<Point> = HashSet::new();
         for pelm in p {
             let new_points = points_on_elem(&pelm, &mut cur);
-            let combined: HashSet<_> = res.union(&new_points).map(|&x| x).collect();
+            let combined: HashSet<_> = res.union(&new_points).cloned().collect();
             res = combined;
         }
         res
@@ -163,9 +163,9 @@ pub mod part_2 {
 
     fn points_on_elem(
         pelm: &PathElement,
-        mut map: &mut PointDistanceMap,
+        map: &mut PointDistanceMap,
         mut p: &mut Point,
-        mut i: &mut u32,
+        i: &mut u32,
     ) -> () {
         let operation: fn(&mut Point) -> () = match pelm.direction {
             Direction::Up => |i| i.y += 1,
@@ -186,7 +186,7 @@ pub mod part_2 {
         let mut res = HashMap::new();
         let mut dist = 0;
         for pelm in p {
-            let new_points = points_on_elem(&pelm, &mut res, &mut cur, &mut dist);
+            points_on_elem(&pelm, &mut res, &mut cur, &mut dist);
         }
         res
     }
@@ -204,8 +204,8 @@ pub mod part_2 {
         let mpx = points_on_path(&input[0]);
         let mpy = points_on_path(&input[1]);
 
-        let px: HashSet<Point> = mpx.keys().map(|&p| p).collect();
-        let py: HashSet<Point> = mpy.keys().map(|&p| p).collect();
+        let px: HashSet<Point> = mpx.keys().cloned().collect();
+        let py: HashSet<Point> = mpy.keys().cloned().collect();
 
         Ok(px
             .intersection(&py)
