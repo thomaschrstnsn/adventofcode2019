@@ -1,7 +1,7 @@
 #!/usr/bin/env stack
 {- stack
   script
-  --resolver lts-12.26
+  --resolver lts-16.23
   --package hspec
   --package hspec-core
   --package vector
